@@ -1,50 +1,65 @@
-*** Settings ***
+* Settings *
 Library  SeleniumLibrary
+Library    Process
 
 
-*** variables ***
+* variables *
+
+${COUNTRY}    TR
+${tv}     data:id:113480717
+${category}    Elektronik
+${item}    Televizyon
+${marka}       LG
 
 
-
-
-*** test cases ***
- Test 1
+*** Test Cases ***
+Test Trendyol
     Open Browser    https://www.trendyol.com/    chrome
     Maximize Browser Window
-    Sleep  2
-    Click Element   css=#country-selection > div > div > div.country-selection__content > div.country-select
-    Sleep  2
-    Click Element   css=#country-selection > div > div > div.country-selection__content > div.country-select > select > option:nth-child(2)
-    Sleep  2
-    Click Element   css=#country-selection > div > div > div.country-selection__content > div.country-actions > button
-    Sleep  2
 
-    Click Element   xpath=//*[@id="navigation-wrapper"]/nav/ul/li[9]/a
-    Sleep  2
-    Page should contain    Televizyon
-    Click Element   xpath=//*[@id="browsing-gw-homepage"]/div/div[1]/div/div[2]/a[4]
-    Sleep  2
-    Page should contain    LG
-    Click Element   xpath=//*[@id="sticky"]/div/div[2]/div[2]/a[4]
-    Sleep  2
-    Page should contain    LG OLED55C14 55
+    Select From List By Value   css=.country-select > select     ${COUNTRY}
+    Click Element   css=.country-actions > button
+
+    Click Element   xpath=//*[@id="navigation-wrapper"]/nav/ul/li/a[.='${category}']
+    Click Element   xpath=//*[@id="browsing-gw-homepage"]//a[.='${item}']
+    Element Text Should Be    css=.srch-rslt-title > .srch-ttl-cntnr-wrppr > .dscrptn > h1    ${item}
 
 
+    Click Element    xpath=//*[contains(@Class, fltr-item-wrppr)] // div[.='${marka}']
 
-    Wait Until element Is Visible   css=#search-app > div > div.srch-rslt-cntnt > div.srch-prdcts-cntnr > div:nth-child(4) > div > div:nth-child(1) > div.p-card-chldrn-cntnr > a > div.image-container > div.image-overlay > div.image-overlay-body
-    Sleep  2
-    Click Element       css=#search-app > div > div.srch-rslt-cntnt > div.srch-prdcts-cntnr > div:nth-child(4) > div > div:nth-child(1) > div.p-card-chldrn-cntnr > a > div.image-container > div.image-overlay > div.image-overlay-body
-    Sleep  2
-    Switch Window      title=LG OLED55C14 55" 139 Ekran Uydu Alıcılı 4K Ultra HD Smart OLED TV Fiyatı, Yorumları - TRENDYOL
-    Click Element      xpath=//*[@id="product-detail-app"]/div/div[2]/div[1]/div[2]/div[5]/button/div[1]
+    # Bekleyelim biraz
+    Sleep    2s
 
-    Sleep  18
+    ${URUN}     Get WebElements    css=.prdct-desc-cntnr-ttl
+    FOR    ${element}    IN    @{URUN}
+
+            Element Text Should Be    ${element}    ${marka}
+
+    END
+
+
+    ${MYTV}    Get WebElement    ${tv} >> css:.prdct-desc-cntnr-name
+
+    ${URL}     Get Element Attribute    ${tv} >> css:a    href
+    Wait Until Element Is Visible    ${MYTV}
+    Click Element    ${MYTV}
+    ${TITLETV}    Get Text    ${MYTV}
+
+    # Switch Window
+    Switch Window    url=${URL}
+
+    # Assertion check tv title after switch tab
+    Element Should Contain     css=.detail-name    ${TITLETV}
+
+    Click Button    css:.add-to-basket
+    Sleep    2s
+
+    Click Element      css:.account-basket
+    Sleep    2s
+
+    # Assertion check tv title in basket
+    Element Should Contain    css=.pb-item   ${TITLETV}
+    Sleep    10s
     Close Browser
 
-
-
-*** keywords ***
- Assertions
-    Page should contain    Televizyon
-    Page should contain    LG
-    Page should contain    LG OLED55C14 55
+* keywords *
